@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from NE_astro_env import DrummondGoNoGoEnv
 
 class HebbianRNN(nn.Module):
-    def __init__(self, input_size=2, hidden_size=8):
+    def __init__(self, input_size=2, hidden_size=8, output_size=2):
         """
         We store:
          - W_ih: weights from input -> hidden
@@ -22,23 +22,24 @@ class HebbianRNN(nn.Module):
         self.W_ih = nn.Parameter(torch.randn(hidden_size, input_size)*0.1)
         self.W_hh = nn.Parameter(torch.randn(hidden_size, hidden_size)*0.1)
         self.b_h  = nn.Parameter(torch.zeros(hidden_size))
+
+        # Output layer: map hidden_state -> logits for 2 actions
+        self.fc_out = nn.Linear(hidden_size, output_size)
         
     def forward(self, x, h_prev):
-        """
-        x: shape (input_size,)
-        h_prev: shape (hidden_size,)
-        Returns new hidden state h
-        """
-        # Convert to PyTorch tensors if they're numpy
         if not isinstance(x, torch.Tensor):
             x = torch.tensor(x, dtype=torch.float)
         if not isinstance(h_prev, torch.Tensor):
             h_prev = torch.tensor(h_prev, dtype=torch.float)
         
-        # RNN update: h = tanh(W_ih x + W_hh h_prev + b_h)
-        h = (self.W_ih @ x) + (self.W_hh @ h_prev) + self.b_h
-        h = torch.tanh(h)
-        return h
+        # Recurrent update
+        h_t = (self.W_ih @ x) + (self.W_hh @ h_prev) + self.b_h
+        h_t = torch.tanh(h_t)
+        
+        # Output logits
+        logits = self.fc_out(h_t)  # shape: (2,) for 2 actions
+        return h_t, logits
+
     
     def get_weights(self):
         """ Return raw references to the weight matrices (as numpy if desired). """
@@ -111,10 +112,10 @@ def run_hebbian_astro_model(num_episodes=20, max_trials_per_episode=50,
             # Forward pass
             x_t = obs
             h_prev = h
-            h_t = model.forward(x_t, h_prev)  # shape(8,)
+            h_t, logits = model.forward(x_t, h_prev)  # shape(8,)
             
-            # For demonstration, pick random action
-            action = np.random.randint(2)
+            # pick action by argmax
+            action = torch.argmax(logits).item()
             
             # Step environment
             next_obs, reward, done, _ = env.step(action)
