@@ -1,0 +1,12 @@
+NUL
+CON
+PRN
+AUX
+COM[1-9]
+LPT[1-9]
+**/NUL
+**/CON
+**/PRN
+**/AUX
+**/COM[1-9]
+**/LPT[1-9]
