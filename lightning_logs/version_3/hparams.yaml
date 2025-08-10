@@ -1,0 +1,7 @@
+alpha: 0.1
+g: 0.8
+hidden_size: 64
+input_size: 3
+learning_rate: 0.001
+nonlinearity: relu
+output_size: 64

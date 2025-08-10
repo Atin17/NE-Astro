@@ -1,0 +1,7 @@
+alpha: 0.1
+g: 1.0
+hidden_size: 16
+input_size: 3
+lr: 0.001
+nonlinearity: tanh
+output_size: 2
